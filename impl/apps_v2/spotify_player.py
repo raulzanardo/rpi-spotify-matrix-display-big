@@ -1,18 +1,31 @@
-import numpy as np, requests, math, time, threading
+import numpy as np
+import requests
+import math
+import time
+import threading
 from PIL import Image, ImageFont, ImageDraw
 from io import BytesIO
 
+
 class SpotifyScreen:
-    def __init__(self, config, modules, fullscreen):
+    def __init__(self, config, modules, fullscreen, canvas_width=192, canvas_height=128):
         self.modules = modules
 
-        self.font = ImageFont.truetype("fonts/tiny.otf", 5)
+        # fonts (small bitmap font included) — scale sizes for larger panel
+        self.title_font = ImageFont.truetype("fonts/tiny.otf", 14)
+        self.artist_font = ImageFont.truetype("fonts/tiny.otf", 12)
 
-        self.canvas_width = 64
-        self.canvas_height = 64
-        self.title_color = (255,255,255)
-        self.artist_color = (255,255,255)
+        self.canvas_width = canvas_width
+        self.canvas_height = canvas_height
+        self.title_color = (255, 255, 255)
+        self.artist_color = (200, 200, 200)
         self.play_color = (102, 240, 110)
+
+        # album art area: 128x128 on the left, info panel to the right
+        self.art_width = 128
+        self.art_height = 128
+        self.info_x = self.art_width
+        self.info_width = self.canvas_width - self.info_x
 
         self.full_screen_always = fullscreen
 
@@ -56,19 +69,20 @@ class SpotifyScreen:
 
     def generateFrame(self, response):
         if response is not None:
-            (artist, title, art_url, self.is_playing, progress_ms, duration_ms) = response
+            (artist, title, art_url, self.is_playing,
+             progress_ms, duration_ms) = response
 
             if self.full_screen_always:
                 if self.current_art_url != art_url:
                     self.current_art_url = art_url
                     response = requests.get(self.current_art_url)
                     img = Image.open(BytesIO(response.content))
-                    self.current_art_img = img.resize((self.canvas_width, self.canvas_height), resample=Image.LANCZOS)
+                    self.current_art_img = img.resize(
+                        (self.canvas_width, self.canvas_height), resample=Image.LANCZOS)
 
-                frame = Image.new("RGB", (self.canvas_width, self.canvas_height), (0,0,0))
-                draw = ImageDraw.Draw(frame)
-
-                frame.paste(self.current_art_img, (0,0))
+                frame = Image.new(
+                    "RGB", (self.canvas_width, self.canvas_height), (0, 0, 0))
+                frame.paste(self.current_art_img, (0, 0))
                 return (frame, self.is_playing)
             else:
                 if not self.is_playing:
@@ -95,70 +109,87 @@ class SpotifyScreen:
                 current_time = math.floor(time.time())
                 show_fullscreen = current_time - self.paused_time >= self.paused_delay
 
-                # show fullscreen album art after pause delay
-                if show_fullscreen and self.current_art_img.size == (48, 48):
-                    response = requests.get(self.current_art_url)
-                    img = Image.open(BytesIO(response.content))
-                    self.current_art_img = img.resize((self.canvas_width, self.canvas_height), resample=Image.LANCZOS)
-                elif not show_fullscreen and (self.current_art_url != art_url or self.current_art_img.size == (self.canvas_width, self.canvas_height)):
+                # ensure current art image is sized for the art panel
+                if self.current_art_url != art_url or self.current_art_img is None:
                     self.current_art_url = art_url
                     response = requests.get(self.current_art_url)
                     img = Image.open(BytesIO(response.content))
-                    self.current_art_img = img.resize((48, 48), resample=Image.LANCZOS)
+                    self.current_art_img = img.resize(
+                        (self.art_width, self.art_height), resample=Image.LANCZOS)
 
-                frame = Image.new("RGB", (self.canvas_width, self.canvas_height), (0,0,0))
+                frame = Image.new(
+                    "RGB", (self.canvas_width, self.canvas_height), (0, 0, 0))
+
+                # paste album art on the left
+                if self.current_art_img is not None:
+                    frame.paste(self.current_art_img, (0, 0))
                 draw = ImageDraw.Draw(frame)
 
-                # exit early if fullscreen
-                if self.current_art_img is not None:
-                    if show_fullscreen:
-                        frame.paste(self.current_art_img, (0,0))
-                        return (frame, self.is_playing)
-                    else:
-                        frame.paste(self.current_art_img, (8,14))
+                # draw title and artist in the right info panel
+                pad_x = 6
+                title_x = self.info_x + pad_x
+                title_y = 12
+                artist_x = title_x
+                artist_y = title_y + 28
 
-                freeze_title = self.title_animation_cnt == 0 and self.artist_animation_cnt > 0
-                freeze_artist = self.artist_animation_cnt == 0 and self.title_animation_cnt > 0
-
-                title_len = self.font.getlength(self.current_title)
-                artist_len = self.font.getlength(self.current_artist)
-
-                text_length = self.canvas_width - 12
-                x_offset = 1
                 spacer = "     "
 
-                if title_len > text_length:
-                    draw.text((x_offset-self.title_animation_cnt, 1), self.current_title + spacer + self.current_title, self.title_color, font = self.font)
+                # Title (scroll if too long)
+                title_len = self.title_font.getlength(self.current_title)
+                avail_width = self.info_width - pad_x * 2
+                if title_len > avail_width:
+                    draw.text((title_x - self.title_animation_cnt, title_y), self.current_title +
+                              spacer + self.current_title, self.title_color, font=self.title_font)
                     if current_time - self.last_title_reset >= self.scroll_delay:
                         self.title_animation_cnt += 1
-                    if freeze_title or self.title_animation_cnt == self.font.getlength(self.current_title + spacer):
+                    if self.title_animation_cnt >= self.title_font.getlength(self.current_title + spacer):
                         self.title_animation_cnt = 0
                         self.last_title_reset = math.floor(time.time())
                 else:
-                    draw.text((x_offset-self.title_animation_cnt, 1), self.current_title, self.title_color, font = self.font)
+                    draw.text((title_x, title_y), self.current_title,
+                              self.title_color, font=self.title_font)
 
-                if artist_len > text_length:
-                    draw.text((x_offset-self.artist_animation_cnt, 7), self.current_artist + spacer + self.current_artist, self.artist_color, font = self.font)
+                # Artist (scroll if too long)
+                artist_len = self.artist_font.getlength(self.current_artist)
+                if artist_len > avail_width:
+                    draw.text((artist_x - self.artist_animation_cnt, artist_y), self.current_artist +
+                              spacer + self.current_artist, self.artist_color, font=self.artist_font)
                     if current_time - self.last_artist_reset >= self.scroll_delay:
                         self.artist_animation_cnt += 1
-                    if freeze_artist or self.artist_animation_cnt == self.font.getlength(self.current_artist + spacer):
+                    if self.artist_animation_cnt >= self.artist_font.getlength(self.current_artist + spacer):
                         self.artist_animation_cnt = 0
                         self.last_artist_reset = math.floor(time.time())
                 else:
-                    draw.text((x_offset-self.artist_animation_cnt, 7), self.current_artist, self.artist_color, font = self.font)
+                    draw.text((artist_x, artist_y), self.current_artist,
+                              self.artist_color, font=self.artist_font)
 
-                draw.rectangle((0,0,0,12), fill=(0,0,0))
-                draw.rectangle((52,0,63,12), fill=(0,0,0))
+                # progress bar in the info panel (near bottom)
+                bar_pad = 8
+                bar_x0 = self.info_x + bar_pad
+                bar_x1 = self.canvas_width - bar_pad
+                bar_h = 10
+                bar_y1 = self.canvas_height - 6
+                bar_y0 = bar_y1 - bar_h
+                draw.rectangle((bar_x0, bar_y0, bar_x1, bar_y1),
+                               fill=(40, 40, 40))
+                try:
+                    frac = 0.0 if duration_ms == 0 else max(
+                        0.0, min(1.0, progress_ms / duration_ms))
+                except Exception:
+                    frac = 0.0
+                fill_x = bar_x0 + int(frac * (bar_x1 - bar_x0))
+                draw.rectangle((bar_x0, bar_y0, fill_x, bar_y1),
+                               fill=self.play_color)
 
-                line_y = 63
-                draw.rectangle((0,line_y-1,63,line_y), fill=(100,100,100))
-                draw.rectangle((0,line_y-1,0+round(((progress_ms / duration_ms) * 100) // 1.57), line_y), fill=self.play_color)
-                drawPlayPause(draw, self.is_playing, self.play_color)
-                
+                # play/pause icon near the top of info panel
+                drawPlayPause(draw, self.is_playing,
+                              self.play_color, offset_x=self.info_x)
+
                 return (frame, self.is_playing)
         else:
-            #not active
-            frame = Image.new("RGB", (self.canvas_width, self.canvas_height), (0,0,0))
+            # not active
+            frame = Image.new(
+                "RGB", (self.canvas_width, self.canvas_height), (0, 0, 0))
             draw = ImageDraw.Draw(frame)
 
             self.current_art_url = ''
@@ -172,18 +203,14 @@ class SpotifyScreen:
 
             return (None, self.is_playing)
 
-def drawPlayPause(draw, is_playing, color):
-    x = 10
-    y = -16
+
+def drawPlayPause(draw, is_playing, color, offset_x=0, offset_y=0):
+    x = offset_x + 8
+    y = offset_y + 8
     if not is_playing:
-        draw.line((x+45,y+19,x+45,y+25), fill = color)
-        draw.line((x+46,y+20,x+46,y+24), fill = color)
-        draw.line((x+47,y+20,x+47,y+24), fill = color)
-        draw.line((x+48,y+21,x+48,y+23), fill = color)
-        draw.line((x+49,y+21,x+49,y+23), fill = color)
-        draw.line((x+50,y+22,x+50,y+22), fill = color)
+        draw.line((x+18, y+8, x+18, y+14), fill=color)
+        draw.line((x+19, y+9, x+19, y+13), fill=color)
+        draw.line((x+22, y+9, x+22, y+13), fill=color)
+        draw.line((x+23, y+10, x+23, y+12), fill=color)
     else:
-        draw.line((x+45,y+19,x+45,y+25), fill = color)
-        draw.line((x+46,y+19,x+46,y+25), fill = color)
-        draw.line((x+49,y+19,x+49,y+25), fill = color)
-        draw.line((x+50,y+19,x+50,y+25), fill = color)
+        draw.polygon([(x+18, y+8), (x+18, y+14), (x+24, y+11)], fill=color)

@@ -27,12 +27,13 @@ def main():
 
     is_full_screen_always = args.fullscreen
 
-    from rgbmatrix import RGBMatrix, RGBMatrixOptions
-
     # get config
     currentdir = os.path.dirname(os.path.abspath(
         inspect.getfile(inspect.currentframe())))
     sys.path.append(currentdir+"/rpi-rgb-led-matrix/bindings/python")
+
+    # import rgbmatrix bindings after adding to path
+    from rgbmatrix import RGBMatrix, RGBMatrixOptions
 
     config = configparser.ConfigParser()
     parsed_configs = config.read('../config.ini')
