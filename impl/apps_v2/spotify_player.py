@@ -21,12 +21,12 @@ class SpotifyScreen:
         self.artist_color = (200, 200, 200)
         self.play_color = (102, 240, 110)
 
-        # album art area: 128x128 on the right, info panel on the left
+        # album art area: 128x128 on the right starting at x=64, info panel on the left 64x128 starting at x=0
         self.art_width = 128
         self.art_height = 128
-        self.info_x = 0
-        self.info_width = self.canvas_width - self.art_width
-        self.art_x = self.canvas_width - self.art_width
+        self.art_x = 64  # album art starts at x=64
+        self.info_x = 0  # info panel starts at x=0
+        self.info_width = 64  # info panel width
 
         self.full_screen_always = fullscreen
 
@@ -142,26 +142,25 @@ class SpotifyScreen:
                 current_time = math.floor(time.time())
                 show_fullscreen = current_time - self.paused_time >= self.paused_delay
 
-                # ensure current art image is sized for the art panel
+                # ensure current art image is sized for the art panel (128x128)
                 if self.current_art_url != art_url or self.current_art_img is None:
                     self.current_art_url = art_url
                     response = requests.get(self.current_art_url)
                     img = Image.open(BytesIO(response.content))
-                    # panel art: crop to fill the 128x128 box so it sits flush at the right
-                    self.current_art_img = self._cover_image(
-                        img, self.art_width, self.art_height)
+                    # panel art: crop to fill exactly 128x128
+                    self.current_art_img = self._cover_image(img, 128, 128)
 
                 frame = Image.new(
                     "RGB", (self.canvas_width, self.canvas_height), (0, 0, 0))
                 draw = ImageDraw.Draw(frame)
 
-                # clear left info panel background
-                draw.rectangle((self.info_x, 0, self.art_x - 1,
-                               self.canvas_height), fill=(0, 0, 0))
-
-                # paste album art on the right
+                # paste album art on the right at x=64, size 128x128
                 if self.current_art_img is not None:
-                    frame.paste(self.current_art_img, (self.art_x, 0))
+                    # Ensure it's exactly 128x128
+                    if self.current_art_img.size != (128, 128):
+                        self.current_art_img = self._cover_image(
+                            self.current_art_img, 128, 128)
+                    frame.paste(self.current_art_img, (64, 0))
 
                 # draw title and artist in the right info panel
                 pad_x = 6
