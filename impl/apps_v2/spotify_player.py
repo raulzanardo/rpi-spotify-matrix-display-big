@@ -153,6 +153,7 @@ class SpotifyScreen:
 
                 frame = Image.new(
                     "RGB", (self.canvas_width, self.canvas_height), (0, 0, 0))
+                draw = ImageDraw.Draw(frame)
 
                 # clear left info panel background
                 draw.rectangle((self.info_x, 0, self.art_x - 1,
@@ -161,7 +162,6 @@ class SpotifyScreen:
                 # paste album art on the right
                 if self.current_art_img is not None:
                     frame.paste(self.current_art_img, (self.art_x, 0))
-                draw = ImageDraw.Draw(frame)
 
                 # draw title and artist in the right info panel
                 pad_x = 6
