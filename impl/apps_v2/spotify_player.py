@@ -118,6 +118,24 @@ class SpotifyScreen:
                 frame.paste(self.current_art_img, (0, 0))
                 return (frame, self.is_playing)
             else:
+                # if playback is paused (music not playing), show clock instead of album art
+                if not self.is_playing:
+                    from datetime import datetime
+                    frame = Image.new(
+                        "RGB", (self.canvas_width, self.canvas_height), (0, 0, 0))
+                    draw = ImageDraw.Draw(frame)
+                    current_time_str = datetime.now().strftime("%H:%M")
+                    time_font = ImageFont.truetype(
+                        "fonts/Montserrat-Regular.otf", 50)
+                    time_bbox = draw.textbbox(
+                        (0, 0), current_time_str, font=time_font)
+                    time_width = time_bbox[2] - time_bbox[0]
+                    time_height = time_bbox[3] - time_bbox[1]
+                    time_x = (self.canvas_width - time_width) // 2
+                    time_y = (self.canvas_height - time_height) // 2
+                    draw.text((time_x, time_y), current_time_str,
+                              (255, 255, 255), font=time_font)
+                    return (frame, self.is_playing)
                 if not self.is_playing:
                     if not self.paused:
                         self.paused_time = math.floor(time.time())
