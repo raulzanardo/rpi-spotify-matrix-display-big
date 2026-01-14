@@ -21,11 +21,12 @@ class SpotifyScreen:
         self.artist_color = (200, 200, 200)
         self.play_color = (102, 240, 110)
 
-        # album art area: 128x128 on the left, info panel to the right
+        # album art area: 128x128 on the right, info panel on the left
         self.art_width = 128
         self.art_height = 128
-        self.info_x = self.art_width
-        self.info_width = self.canvas_width - self.info_x
+        self.info_x = 0
+        self.info_width = self.canvas_width - self.art_width
+        self.art_x = self.canvas_width - self.art_width
 
         self.full_screen_always = fullscreen
 
@@ -136,17 +137,17 @@ class SpotifyScreen:
                 frame = Image.new(
                     "RGB", (self.canvas_width, self.canvas_height), (0, 0, 0))
 
-                # paste album art on the left
+                # paste album art on the right
                 if self.current_art_img is not None:
-                    frame.paste(self.current_art_img, (0, 0))
+                    frame.paste(self.current_art_img, (self.art_x, 0))
                 draw = ImageDraw.Draw(frame)
 
                 # draw title and artist in the right info panel
                 pad_x = 6
                 title_x = self.info_x + pad_x
-                title_y = 12
+                title_y = 20
                 artist_x = title_x
-                artist_y = title_y + 28
+                artist_y = title_y + 36
 
                 spacer = "     "
 
@@ -179,10 +180,10 @@ class SpotifyScreen:
                     draw.text((artist_x, artist_y), self.current_artist,
                               self.artist_color, font=self.artist_font)
 
-                # progress bar in the info panel (near bottom)
+                # progress bar in the left info panel (near bottom)
                 bar_pad = 8
                 bar_x0 = self.info_x + bar_pad
-                bar_x1 = self.canvas_width - bar_pad
+                bar_x1 = self.info_x + self.info_width - bar_pad
                 bar_h = 10
                 bar_y1 = self.canvas_height - 6
                 bar_y0 = bar_y1 - bar_h
@@ -197,9 +198,9 @@ class SpotifyScreen:
                 draw.rectangle((bar_x0, bar_y0, fill_x, bar_y1),
                                fill=self.play_color)
 
-                # play/pause icon near the top of info panel
+                # play/pause icon near the top of left info panel
                 drawPlayPause(draw, self.is_playing,
-                              self.play_color, offset_x=self.info_x)
+                              self.play_color, offset_x=self.info_x + 4, offset_y=4)
 
                 return (frame, self.is_playing)
         else:
