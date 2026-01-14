@@ -11,9 +11,9 @@ class SpotifyScreen:
     def __init__(self, config, modules, fullscreen, canvas_width=192, canvas_height=128):
         self.modules = modules
 
-        # fonts (small bitmap font included) — scale sizes for larger panel
-        self.title_font = ImageFont.truetype("fonts/tiny.otf", 14)
-        self.artist_font = ImageFont.truetype("fonts/tiny.otf", 12)
+        # fonts sized for 64px width panel
+        self.title_font = ImageFont.truetype("fonts/tiny.otf", 8)
+        self.artist_font = ImageFont.truetype("fonts/tiny.otf", 7)
 
         self.canvas_width = canvas_width
         self.canvas_height = canvas_height
@@ -162,8 +162,8 @@ class SpotifyScreen:
                             self.current_art_img, 128, 128)
                     frame.paste(self.current_art_img, (64, 0))
 
-                # draw title and artist in the right info panel
-                pad_x = 6
+                # draw title and artist in the left info panel
+                pad_x = 2
                 title_x = self.info_x + pad_x
                 title_y = 20
                 artist_x = title_x
