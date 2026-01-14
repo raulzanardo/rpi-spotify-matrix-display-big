@@ -4,7 +4,13 @@ A Spotify display for LED matrices forked from [kylejohnsonkj](https://github.co
 
 ## Hardware
 
-TODO: list the specific LED panel, Pi model, and power requirements used for this project.
+- Repository: https://github.com/raulzanardo/my-led-matrix — contains panel
+  specifications, and power recommendations for the 192x128 LED matrix used with this
+  project.
+- Brief: This fork targets a 192x128 RGB LED matrix driven by a Raspberry Pi (Pi 3 or Pi 4
+  recommended). Use a dedicated 5V power supply sized for your panel (peak current can
+  range from ~4A to 10A depending on brightness and panel size). See the linked repo for
+  wiring diagrams, configuration files, and panel-specific notes.
 
 ## Spotify Pre-Setup
 
