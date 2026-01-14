@@ -1,4 +1,4 @@
-# rpi-spotify-matrix-display
+# rpi-spotify-matrix-display-big
 
 A Spotify display for LED matrices forked from [kylejohnsonkj](https://github.com/kylejohnsonkj)'s [rpi-spotify-matrix-display](https://github.com/kylejohnsonkj/rpi-spotify-matrix-display), modified to run on a 192x128 matrix setup.
 
