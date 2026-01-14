@@ -54,6 +54,22 @@ class SpotifyScreen:
         self.thread = threading.Thread(target=self.getCurrentPlaybackAsync)
         self.thread.start()
 
+    def _fit_image(self, img, target_w, target_h, fill_color=(0, 0, 0)):
+        # Preserve aspect ratio, fit within target and center on background
+        img = img.convert('RGB')
+        iw, ih = img.size
+        if iw == 0 or ih == 0:
+            return Image.new('RGB', (target_w, target_h), fill_color)
+        scale = min(target_w / iw, target_h / ih)
+        new_w = max(1, int(iw * scale))
+        new_h = max(1, int(ih * scale))
+        resized = img.resize((new_w, new_h), resample=Image.LANCZOS)
+        canvas = Image.new('RGB', (target_w, target_h), fill_color)
+        x = (target_w - new_w) // 2
+        y = (target_h - new_h) // 2
+        canvas.paste(resized, (x, y))
+        return canvas
+
     def getCurrentPlaybackAsync(self):
         # delay spotify fetches
         time.sleep(3)
@@ -77,8 +93,8 @@ class SpotifyScreen:
                     self.current_art_url = art_url
                     response = requests.get(self.current_art_url)
                     img = Image.open(BytesIO(response.content))
-                    self.current_art_img = img.resize(
-                        (self.canvas_width, self.canvas_height), resample=Image.LANCZOS)
+                    self.current_art_img = self._fit_image(
+                        img, self.canvas_width, self.canvas_height)
 
                 frame = Image.new(
                     "RGB", (self.canvas_width, self.canvas_height), (0, 0, 0))
@@ -114,8 +130,8 @@ class SpotifyScreen:
                     self.current_art_url = art_url
                     response = requests.get(self.current_art_url)
                     img = Image.open(BytesIO(response.content))
-                    self.current_art_img = img.resize(
-                        (self.art_width, self.art_height), resample=Image.LANCZOS)
+                    self.current_art_img = self._fit_image(
+                        img, self.art_width, self.art_height)
 
                 frame = Image.new(
                     "RGB", (self.canvas_width, self.canvas_height), (0, 0, 0))
