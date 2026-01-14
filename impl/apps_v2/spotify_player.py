@@ -179,14 +179,13 @@ class SpotifyScreen:
                         "fonts/Montserrat-Regular.otf", 50)
                     time_bbox = draw.textbbox(
                         (0, 0), current_time_str, font=time_font)
-                    time_width = time_bbox[2] - time_bbox[0]
-                    time_height = time_bbox[3] - time_bbox[1]
-                    time_x = (self.canvas_width - time_width) // 2
-                    time_y = (self.canvas_height - time_height) // 2
+                    # center using midpoint anchor 'mm'
+                    cx = self.canvas_width // 2
+                    cy = self.canvas_height // 2
                     now = datetime.now()
                     color = self._get_clock_digit_color(now.hour, now.minute)
-                    draw.text((time_x, time_y), current_time_str,
-                              color, font=time_font)
+                    draw.text((cx, cy), current_time_str,
+                              font=time_font, fill=color, anchor='mm')
                     return (frame, self.is_playing)
                 if not self.is_playing:
                     if not self.paused:
@@ -316,14 +315,13 @@ class SpotifyScreen:
             current_time_str = datetime.now().strftime("%H:%M")
             time_font = ImageFont.truetype("fonts/Montserrat-Regular.otf", 50)
             time_bbox = draw.textbbox((0, 0), current_time_str, font=time_font)
-            time_width = time_bbox[2] - time_bbox[0]
-            time_height = time_bbox[3] - time_bbox[1]
-            time_x = (self.canvas_width - time_width) // 2
-            time_y = (self.canvas_height - time_height) // 2
+            # center using midpoint anchor 'mm'
+            cx = self.canvas_width // 2
+            cy = self.canvas_height // 2
             now = datetime.now()
             color = self._get_clock_digit_color(now.hour, now.minute)
-            draw.text((time_x, time_y), current_time_str,
-                      color, font=time_font)
+            draw.text((cx, cy), current_time_str,
+                      font=time_font, fill=color, anchor='mm')
 
             self.current_art_url = ''
             self.is_playing = False
