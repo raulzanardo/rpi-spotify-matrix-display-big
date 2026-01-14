@@ -93,6 +93,56 @@ class SpotifyScreen:
             self.response = self.spotify_module.getCurrentPlayback()
             time.sleep(1)
 
+    def _get_clock_digit_color(self, hour, minute):
+        # Ported from getClockDigitColor in spotify_clock_wf2 (color_tools.h)
+        # Defaults for configuration (can be exposed later via config)
+        CONFIG_NIGHT_START_HOUR = 22
+        CONFIG_NIGHT_END_HOUR = 6
+        NIGHT_TEMP = 1500.0
+        MIN_TEMP = 2000.0
+        MAX_TEMP = 6500.0
+        CONFIG_NIGHT_DIM_FACTOR = 0.3
+
+        timeOfDay = hour + minute / 60.0
+
+        if timeOfDay < CONFIG_NIGHT_END_HOUR or timeOfDay >= CONFIG_NIGHT_START_HOUR:
+            temp = NIGHT_TEMP
+        elif timeOfDay < 12:
+            temp = MIN_TEMP + (MAX_TEMP - MIN_TEMP) * ((timeOfDay - 6) / 6.0)
+        elif timeOfDay < 18:
+            temp = MAX_TEMP - (MAX_TEMP - MIN_TEMP) * ((timeOfDay - 12) / 6.0)
+        else:
+            temp = MIN_TEMP - (MIN_TEMP - NIGHT_TEMP) * \
+                ((timeOfDay - 18) / 4.0)
+
+        # Convert temperature to RGB (approximation)
+        t = temp / 100.0
+        if t <= 66:
+            red = 255.0
+            green = 99.4708025861 * math.log(t) - 161.1195681661
+            if t <= 19:
+                blue = 0.0
+            else:
+                blue = 138.5177312231 * math.log(t - 10) - 305.0447927307
+        else:
+            red = 329.698727446 * math.pow(t - 60, -0.1332047592)
+            green = 288.1221695283 * math.pow(t - 60, -0.0755148492)
+            blue = 255.0
+
+        # Clamp
+        red = max(0.0, min(255.0, red))
+        green = max(0.0, min(255.0, green))
+        blue = max(0.0, min(255.0, blue))
+
+        # Dim at night
+        if timeOfDay < CONFIG_NIGHT_END_HOUR or timeOfDay >= CONFIG_NIGHT_START_HOUR:
+            dim = CONFIG_NIGHT_DIM_FACTOR
+            red *= dim
+            green *= dim
+            blue *= dim
+
+        return (int(red), int(green), int(blue))
+
     def generate(self):
         if not self.spotify_module.queue.empty():
             self.response = self.spotify_module.queue.get()
@@ -133,8 +183,10 @@ class SpotifyScreen:
                     time_height = time_bbox[3] - time_bbox[1]
                     time_x = (self.canvas_width - time_width) // 2
                     time_y = (self.canvas_height - time_height) // 2
+                    now = datetime.now()
+                    color = self._get_clock_digit_color(now.hour, now.minute)
                     draw.text((time_x, time_y), current_time_str,
-                              (255, 255, 255), font=time_font)
+                              color, font=time_font)
                     return (frame, self.is_playing)
                 if not self.is_playing:
                     if not self.paused:
@@ -268,8 +320,10 @@ class SpotifyScreen:
             time_height = time_bbox[3] - time_bbox[1]
             time_x = (self.canvas_width - time_width) // 2
             time_y = (self.canvas_height - time_height) // 2
+            now = datetime.now()
+            color = self._get_clock_digit_color(now.hour, now.minute)
             draw.text((time_x, time_y), current_time_str,
-                      (255, 255, 255), font=time_font)
+                      color, font=time_font)
 
             self.current_art_url = ''
             self.is_playing = False
