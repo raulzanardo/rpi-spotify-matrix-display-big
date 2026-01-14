@@ -51,8 +51,11 @@ def main():
     options = RGBMatrixOptions()
     options.hardware_mapping = config.get(
         'Matrix', 'hardware_mapping', fallback='regular')
-    options.rows = canvas_height
-    options.cols = canvas_width
+    # Use panel configuration from config.ini — rows must be <=64
+    options.rows = config.getint('Matrix', 'rows', fallback=64)
+    options.cols = config.getint('Matrix', 'cols', fallback=64)
+    options.chain_length = config.getint('Matrix', 'chain_length', fallback=1)
+    options.parallel = config.getint('Matrix', 'parallel', fallback=1)
     options.brightness = config.getint('Matrix', 'brightness', fallback=100)
     options.gpio_slowdown = config.getint(
         'Matrix', 'gpio_slowdown', fallback=1)
