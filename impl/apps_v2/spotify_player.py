@@ -242,15 +242,14 @@ class SpotifyScreen:
                 "RGB", (self.canvas_width, self.canvas_height), (0, 0, 0))
             draw = ImageDraw.Draw(frame)
 
-            # Display current time with 32px padding
+            # Display current time centered on screen
             current_time_str = datetime.now().strftime("%H:%M")
-            padding = 32
             time_font = ImageFont.truetype("fonts/Montserrat-Regular.otf", 50)
             time_bbox = draw.textbbox((0, 0), current_time_str, font=time_font)
             time_width = time_bbox[2] - time_bbox[0]
             time_height = time_bbox[3] - time_bbox[1]
-            time_x = padding
-            time_y = padding
+            time_x = (self.canvas_width - time_width) // 2
+            time_y = (self.canvas_height - time_height) // 2
             draw.text((time_x, time_y), current_time_str,
                       (255, 255, 255), font=time_font)
 
