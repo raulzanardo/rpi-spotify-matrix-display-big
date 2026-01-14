@@ -13,8 +13,8 @@ from modules import spotify_module
 
 
 def main():
-    canvas_width = 64
-    canvas_height = 64
+    canvas_width = 192
+    canvas_height = 128
 
     # get arguments
     parser = argparse.ArgumentParser(
@@ -44,14 +44,14 @@ def main():
     # connect to Spotify and create display image
     modules = {'spotify': spotify_module.SpotifyModule(config)}
     app_list = [spotify_player.SpotifyScreen(
-        config, modules, is_full_screen_always)]
+        config, modules, is_full_screen_always, canvas_width, canvas_height)]
 
     # setup matrix
     options = RGBMatrixOptions()
     options.hardware_mapping = config.get(
         'Matrix', 'hardware_mapping', fallback='regular')
-    options.rows = canvas_width
-    options.cols = canvas_height
+    options.rows = canvas_height
+    options.cols = canvas_width
     options.brightness = config.getint('Matrix', 'brightness', fallback=100)
     options.gpio_slowdown = config.getint(
         'Matrix', 'gpio_slowdown', fallback=1)
