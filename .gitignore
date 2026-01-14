@@ -1,8 +1,38 @@
-__pycache__
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+
+# Virtual Environments
+.venv/
+venv/
+ENV/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
 .DS_Store
-lib
-bin
+Thumbs.db
+
+# Project specific
+lib/
+bin/
 rpi-rgb-led-matrix
-impl/.cache
-.venv
+impl/.cache/
 config.ini
+*.log
+
+# Spotify cache
+.cache
+.cache-*

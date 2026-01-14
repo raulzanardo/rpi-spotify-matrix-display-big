@@ -30,13 +30,14 @@ def main():
     # get config
     currentdir = os.path.dirname(os.path.abspath(
         inspect.getfile(inspect.currentframe())))
+    parentdir = os.path.dirname(currentdir)
     sys.path.append(currentdir+"/rpi-rgb-led-matrix/bindings/python")
 
     # import rgbmatrix bindings after adding to path
     from rgbmatrix import RGBMatrix, RGBMatrixOptions
 
     config = configparser.ConfigParser()
-    parsed_configs = config.read('../config.ini')
+    parsed_configs = config.read(os.path.join(parentdir, 'config.ini'))
 
     if len(parsed_configs) == 0:
         print("no config file found")
