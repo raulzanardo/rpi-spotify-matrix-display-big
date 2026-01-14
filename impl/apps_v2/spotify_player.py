@@ -244,7 +244,7 @@ class SpotifyScreen:
 
             # Display current time centered
             current_time_str = datetime.now().strftime("%H:%M")
-            time_font = ImageFont.truetype("fonts/tiny.otf", 20)
+            time_font = ImageFont.truetype("fonts/tiny.otf", 50)
             time_bbox = draw.textbbox((0, 0), current_time_str, font=time_font)
             time_width = time_bbox[2] - time_bbox[0]
             time_height = time_bbox[3] - time_bbox[1]
