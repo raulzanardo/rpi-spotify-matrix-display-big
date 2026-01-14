@@ -138,7 +138,8 @@ class SpotifyScreen:
                     "RGB", (self.canvas_width, self.canvas_height), (0, 0, 0))
 
                 # clear left info panel background
-                draw.rectangle((self.info_x, 0, self.art_x - 1, self.canvas_height), fill=(0, 0, 0))
+                draw.rectangle((self.info_x, 0, self.art_x - 1,
+                               self.canvas_height), fill=(0, 0, 0))
 
                 # paste album art on the right
                 if self.current_art_img is not None:
@@ -168,10 +169,14 @@ class SpotifyScreen:
                             return candidate
                     return ell
 
-                title_to_draw = fit_text(self.current_title, self.title_font, avail_width)
-                artist_to_draw = fit_text(self.current_artist, self.artist_font, avail_width)
-                draw.text((title_x, title_y), title_to_draw, self.title_color, font=self.title_font)
-                draw.text((artist_x, artist_y), artist_to_draw, self.artist_color, font=self.artist_font)
+                title_to_draw = fit_text(
+                    self.current_title, self.title_font, avail_width)
+                artist_to_draw = fit_text(
+                    self.current_artist, self.artist_font, avail_width)
+                draw.text((title_x, title_y), title_to_draw,
+                          self.title_color, font=self.title_font)
+                draw.text((artist_x, artist_y), artist_to_draw,
+                          self.artist_color, font=self.artist_font)
 
                 # progress bar in the left info panel (near bottom)
                 bar_pad = 8
