@@ -171,28 +171,49 @@ class SpotifyScreen:
 
                 spacer = "     "
 
-                # Title and Artist: draw clipped with ellipsis if too long so they always appear
+                # Title and Artist: wrap to multiple lines if needed
                 avail_width = self.info_width - pad_x * 2
 
-                def fit_text(text, font, max_w):
-                    # returns possibly truncated text to fit max_w
-                    if font.getlength(text) <= max_w:
-                        return text
-                    ell = '...'
-                    for l in range(len(text), 0, -1):
-                        candidate = text[:l].rstrip() + ell
-                        if font.getlength(candidate) <= max_w:
-                            return candidate
-                    return ell
+                def wrap_text(text, font, max_w):
+                    # returns list of lines that fit within max_w
+                    words = text.split()
+                    lines = []
+                    current_line = ""
 
-                title_to_draw = fit_text(
+                    for word in words:
+                        test_line = current_line + \
+                            (" " if current_line else "") + word
+                        if font.getlength(test_line) <= max_w:
+                            current_line = test_line
+                        else:
+                            if current_line:
+                                lines.append(current_line)
+                            current_line = word
+
+                    if current_line:
+                        lines.append(current_line)
+
+                    return lines if lines else [text[:1]]  # at least one char
+
+                title_lines = wrap_text(
                     self.current_title, self.title_font, avail_width)
-                artist_to_draw = fit_text(
+                artist_lines = wrap_text(
                     self.current_artist, self.artist_font, avail_width)
-                draw.text((title_x, title_y), title_to_draw,
-                          self.title_color, font=self.title_font)
-                draw.text((artist_x, artist_y), artist_to_draw,
-                          self.artist_color, font=self.artist_font)
+
+                # Draw title lines
+                y_pos = title_y
+                line_height = 6
+                for line in title_lines:
+                    draw.text((title_x, y_pos), line,
+                              self.title_color, font=self.title_font)
+                    y_pos += line_height
+
+                # Draw artist lines
+                y_pos = artist_y
+                for line in artist_lines:
+                    draw.text((artist_x, y_pos), line,
+                              self.artist_color, font=self.artist_font)
+                    y_pos += line_height
 
                 # progress bar in the left info panel (near bottom)
                 bar_pad = 8
