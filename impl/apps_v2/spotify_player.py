@@ -11,9 +11,9 @@ class SpotifyScreen:
     def __init__(self, config, modules, fullscreen, canvas_width=192, canvas_height=128):
         self.modules = modules
 
-        # fonts sized for 64px width panel
-        self.title_font = ImageFont.truetype("fonts/tiny.otf", 8)
-        self.artist_font = ImageFont.truetype("fonts/tiny.otf", 7)
+        # very small fonts for 64px width panel
+        self.title_font = ImageFont.truetype("fonts/tiny.otf", 5)
+        self.artist_font = ImageFont.truetype("fonts/tiny.otf", 5)
 
         self.canvas_width = canvas_width
         self.canvas_height = canvas_height
@@ -211,10 +211,6 @@ class SpotifyScreen:
                 fill_x = bar_x0 + int(frac * (bar_x1 - bar_x0))
                 draw.rectangle((bar_x0, bar_y0, fill_x, bar_y1),
                                fill=self.play_color)
-
-                # play/pause icon near the top of left info panel
-                drawPlayPause(draw, self.is_playing,
-                              self.play_color, offset_x=self.info_x + 4, offset_y=4)
 
                 return (frame, self.is_playing)
         else:
