@@ -71,6 +71,21 @@ class SpotifyScreen:
         canvas.paste(resized, (x, y))
         return canvas
 
+    def _cover_image(self, img, target_w, target_h):
+        # Resize and crop to completely fill target (no stretching)
+        img = img.convert('RGB')
+        iw, ih = img.size
+        if iw == 0 or ih == 0:
+            return Image.new('RGB', (target_w, target_h), (0, 0, 0))
+        scale = max(target_w / iw, target_h / ih)
+        new_w = max(1, int(iw * scale))
+        new_h = max(1, int(ih * scale))
+        resized = img.resize((new_w, new_h), resample=Image.LANCZOS)
+        # crop center
+        left = (new_w - target_w) // 2
+        top = (new_h - target_h) // 2
+        return resized.crop((left, top, left + target_w, top + target_h))
+
     def getCurrentPlaybackAsync(self):
         # delay spotify fetches
         time.sleep(3)
@@ -94,7 +109,8 @@ class SpotifyScreen:
                     self.current_art_url = art_url
                     response = requests.get(self.current_art_url)
                     img = Image.open(BytesIO(response.content))
-                    self.current_art_img = self._fit_image(
+                    # fullscreen: cover the screen to avoid letterbox but no stretching
+                    self.current_art_img = self._cover_image(
                         img, self.canvas_width, self.canvas_height)
 
                 frame = Image.new(
@@ -131,7 +147,8 @@ class SpotifyScreen:
                     self.current_art_url = art_url
                     response = requests.get(self.current_art_url)
                     img = Image.open(BytesIO(response.content))
-                    self.current_art_img = self._fit_image(
+                    # panel art: crop to fill the 128x128 box so it sits flush at the right
+                    self.current_art_img = self._cover_image(
                         img, self.art_width, self.art_height)
 
                 frame = Image.new(
