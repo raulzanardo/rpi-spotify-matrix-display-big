@@ -137,6 +137,9 @@ class SpotifyScreen:
                 frame = Image.new(
                     "RGB", (self.canvas_width, self.canvas_height), (0, 0, 0))
 
+                # clear left info panel background
+                draw.rectangle((self.info_x, 0, self.art_x - 1, self.canvas_height), fill=(0, 0, 0))
+
                 # paste album art on the right
                 if self.current_art_img is not None:
                     frame.paste(self.current_art_img, (self.art_x, 0))
@@ -151,34 +154,24 @@ class SpotifyScreen:
 
                 spacer = "     "
 
-                # Title (scroll if too long)
-                title_len = self.title_font.getlength(self.current_title)
+                # Title and Artist: draw clipped with ellipsis if too long so they always appear
                 avail_width = self.info_width - pad_x * 2
-                if title_len > avail_width:
-                    draw.text((title_x - self.title_animation_cnt, title_y), self.current_title +
-                              spacer + self.current_title, self.title_color, font=self.title_font)
-                    if current_time - self.last_title_reset >= self.scroll_delay:
-                        self.title_animation_cnt += 1
-                    if self.title_animation_cnt >= self.title_font.getlength(self.current_title + spacer):
-                        self.title_animation_cnt = 0
-                        self.last_title_reset = math.floor(time.time())
-                else:
-                    draw.text((title_x, title_y), self.current_title,
-                              self.title_color, font=self.title_font)
 
-                # Artist (scroll if too long)
-                artist_len = self.artist_font.getlength(self.current_artist)
-                if artist_len > avail_width:
-                    draw.text((artist_x - self.artist_animation_cnt, artist_y), self.current_artist +
-                              spacer + self.current_artist, self.artist_color, font=self.artist_font)
-                    if current_time - self.last_artist_reset >= self.scroll_delay:
-                        self.artist_animation_cnt += 1
-                    if self.artist_animation_cnt >= self.artist_font.getlength(self.current_artist + spacer):
-                        self.artist_animation_cnt = 0
-                        self.last_artist_reset = math.floor(time.time())
-                else:
-                    draw.text((artist_x, artist_y), self.current_artist,
-                              self.artist_color, font=self.artist_font)
+                def fit_text(text, font, max_w):
+                    # returns possibly truncated text to fit max_w
+                    if font.getlength(text) <= max_w:
+                        return text
+                    ell = '...'
+                    for l in range(len(text), 0, -1):
+                        candidate = text[:l].rstrip() + ell
+                        if font.getlength(candidate) <= max_w:
+                            return candidate
+                    return ell
+
+                title_to_draw = fit_text(self.current_title, self.title_font, avail_width)
+                artist_to_draw = fit_text(self.current_artist, self.artist_font, avail_width)
+                draw.text((title_x, title_y), title_to_draw, self.title_color, font=self.title_font)
+                draw.text((artist_x, artist_y), artist_to_draw, self.artist_color, font=self.artist_font)
 
                 # progress bar in the left info panel (near bottom)
                 bar_pad = 8
