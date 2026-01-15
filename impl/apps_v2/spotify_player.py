@@ -8,7 +8,7 @@ from io import BytesIO
 
 
 class SpotifyScreen:
-    def __init__(self, config, modules, fullscreen, canvas_width=192, canvas_height=128):
+    def __init__(self, config, modules, fullscreen, canvas_width=192, canvas_height=128, show_clock=False):
         self.modules = modules
 
         # very small fonts for 64px width panel
@@ -29,6 +29,7 @@ class SpotifyScreen:
         self.info_width = 64  # info panel width
 
         self.full_screen_always = fullscreen
+        self.show_clock = show_clock
 
         self.current_art_url = ''
         self.current_art_img = None
@@ -166,6 +167,52 @@ class SpotifyScreen:
                 frame = Image.new(
                     "RGB", (self.canvas_width, self.canvas_height), (0, 0, 0))
                 frame.paste(self.current_art_img, (0, 0))
+                # optionally overlay a small clock on top of the cover (only in fullscreen)
+                if self.show_clock:
+                    from datetime import datetime
+                    now = datetime.now()
+                    # derive colors from time-of-day
+                    body_rgb = self._get_clock_digit_color(
+                        now.hour, now.minute)
+                    # slightly darker border
+                    border_rgb = tuple(max(0, c - 60) for c in body_rgb)
+
+                    # overlay with alpha for subtle background
+                    overlay = Image.new(
+                        'RGBA', (self.canvas_width, self.canvas_height), (0, 0, 0, 0))
+                    odraw = ImageDraw.Draw(overlay)
+
+                    # clock sizing and placement (top-left margin)
+                    dia = min(56, self.canvas_height // 3)
+                    margin = 6
+                    x0 = margin
+                    y0 = margin
+                    x1 = x0 + dia
+                    y1 = y0 + dia
+
+                    body_rgba = (body_rgb[0], body_rgb[1], body_rgb[2], 200)
+                    border_rgba = (
+                        border_rgb[0], border_rgb[1], border_rgb[2], 255)
+
+                    odraw.ellipse((x0, y0, x1, y1), fill=body_rgba,
+                                  outline=border_rgba, width=3)
+
+                    # draw time string centered in circle
+                    time_str = now.strftime("%H:%M")
+                    # font sized relative to circle
+                    try:
+                        time_font = ImageFont.truetype(
+                            "fonts/Montserrat-Regular.otf", int(dia * 0.45))
+                    except Exception:
+                        time_font = ImageFont.load_default()
+
+                    odraw.text(((x0 + x1) // 2, (y0 + y1) // 2), time_str,
+                               font=time_font, fill=(255, 255, 255, 255), anchor='mm')
+
+                    # composite overlay onto frame
+                    frame = frame.convert('RGBA')
+                    frame = Image.alpha_composite(
+                        frame, overlay).convert('RGB')
                 return (frame, self.is_playing)
             else:
                 # if playback is paused (music not playing), show clock instead of album art

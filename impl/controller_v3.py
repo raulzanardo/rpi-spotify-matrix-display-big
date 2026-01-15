@@ -23,9 +23,12 @@ def main():
 
     parser.add_argument('-f', '--fullscreen', action='store_true',
                         help='Always display album art in fullscreen')
+    parser.add_argument('-c', '--clock', action='store_true',
+                        help='Show clock overlay on top of cover in fullscreen')
     args = parser.parse_args()
 
     is_full_screen_always = args.fullscreen
+    show_clock = args.clock
 
     # get config
     currentdir = os.path.dirname(os.path.abspath(
@@ -46,7 +49,7 @@ def main():
     # connect to Spotify and create display image
     modules = {'spotify': spotify_module.SpotifyModule(config)}
     app_list = [spotify_player.SpotifyScreen(
-        config, modules, is_full_screen_always, canvas_width, canvas_height)]
+        config, modules, is_full_screen_always, canvas_width, canvas_height, show_clock=show_clock)]
 
     # setup matrix
     options = RGBMatrixOptions()
