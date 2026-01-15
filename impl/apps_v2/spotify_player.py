@@ -155,6 +155,24 @@ class SpotifyScreen:
                 colors.sort(key=lambda x: x[0])
                 most = colors[-1][1]
                 least = colors[0][1]
+
+                # if most and least are too similar, try to pick a more vibrant "secondary" color
+                if self._are_colors_similar(most, least, threshold=60):
+                    # compute vibrancy for all colors and pick the most vibrant as secondary
+                    vib_best = None
+                    vib_val = -1.0
+                    for cnt, col in colors:
+                        v = self._color_vibrancy(col)
+                        if v > vib_val:
+                            vib_val = v
+                            vib_best = col
+                    if vib_best is not None:
+                        least = vib_best
+
+                    # if still similar, invert the dominant color to ensure contrast
+                    if self._are_colors_similar(most, least, threshold=60):
+                        least = self._invert_color(most)
+
                 return (most, least)
 
             # fallback: use adaptive palette
@@ -175,6 +193,36 @@ class SpotifyScreen:
         except Exception:
             pass
         return ((255, 255, 255), (200, 200, 200))
+
+    def _are_colors_similar(self, c1, c2, threshold=60):
+        """Return True if RGB colors c1 and c2 are within `threshold` Euclidean distance."""
+        try:
+            dr = int(c1[0]) - int(c2[0])
+            dg = int(c1[1]) - int(c2[1])
+            db = int(c1[2]) - int(c2[2])
+            dist = math.sqrt(dr * dr + dg * dg + db * db)
+            return dist < threshold
+        except Exception:
+            return False
+
+    def _color_vibrancy(self, c):
+        """Estimate vibrancy using HSV saturation * value (0..1)."""
+        try:
+            import colorsys
+
+            r = c[0] / 255.0
+            g = c[1] / 255.0
+            b = c[2] / 255.0
+            h, s, v = colorsys.rgb_to_hsv(r, g, b)
+            return s * v
+        except Exception:
+            return 0.0
+
+    def _invert_color(self, c):
+        try:
+            return (255 - c[0], 255 - c[1], 255 - c[2])
+        except Exception:
+            return (255, 255, 255)
 
     def generate(self):
         if not self.spotify_module.queue.empty():
