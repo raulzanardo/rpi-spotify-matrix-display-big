@@ -145,34 +145,33 @@ class SpotifyScreen:
         return (int(red), int(green), int(blue))
 
     def _get_top_two_colors(self, img, sample=50):
-        """Return the two most prevalent RGB colors from `img` as (primary, secondary).
+        """Return (most_prevalent, least_prevalent) RGB colors from `img`.
         Falls back to white/gray on error."""
         try:
             small = img.convert('RGB').resize((sample, sample))
             colors = small.getcolors(sample * sample)
             if colors:
                 # colors is list of (count, (r,g,b))
-                colors.sort(reverse=True, key=lambda x: x[0])
-                top = [c[1] for c in colors[:2]]
-                if len(top) == 1:
-                    top.append(top[0])
-                return (top[0], top[1])
+                colors.sort(key=lambda x: x[0])
+                most = colors[-1][1]
+                least = colors[0][1]
+                return (most, least)
 
             # fallback: use adaptive palette
             pal = small.convert('P', palette=Image.ADAPTIVE, colors=5)
             palette = pal.getpalette()
             counts = pal.getcolors()
-            counts.sort(reverse=True, key=lambda x: x[0])
-            res = []
-            for cnt, idx in counts[:2]:
-                r = palette[idx * 3]
-                g = palette[idx * 3 + 1]
-                b = palette[idx * 3 + 2]
-                res.append((r, g, b))
-            if len(res) == 1:
-                res.append(res[0])
-            if res:
-                return (res[0], res[1])
+            if counts:
+                counts.sort(key=lambda x: x[0])
+                most_idx = counts[-1][1]
+                least_idx = counts[0][1]
+                r = palette[most_idx * 3]
+                g = palette[most_idx * 3 + 1]
+                b = palette[most_idx * 3 + 2]
+                r2 = palette[least_idx * 3]
+                g2 = palette[least_idx * 3 + 1]
+                b2 = palette[least_idx * 3 + 2]
+                return ((r, g, b), (r2, g2, b2))
         except Exception:
             pass
         return ((255, 255, 255), (200, 200, 200))
