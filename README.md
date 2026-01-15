@@ -2,6 +2,13 @@
 
 A Spotify display for LED matrices forked from [kylejohnsonkj](https://github.com/kylejohnsonkj)'s [rpi-spotify-matrix-display](https://github.com/kylejohnsonkj/rpi-spotify-matrix-display), modified to run on a 192x128 matrix setup.
 
+Note: All emulation code and emulator support have been removed from this fork — this
+repository focuses on driving real 192x128 LED matrix hardware directly.
+
+<p align="center">
+  <img src="images/example.png" width="500" alt="doom">
+</p>
+
 ## Hardware
 
 - Repository: https://github.com/raulzanardo/my-led-matrix — contains panel
