@@ -182,32 +182,38 @@ class SpotifyScreen:
                         'RGBA', (self.canvas_width, self.canvas_height), (0, 0, 0, 0))
                     odraw = ImageDraw.Draw(overlay)
 
-                    # clock sizing and placement (top-left margin)
-                    dia = min(56, self.canvas_height // 3)
-                    margin = 6
-                    x0 = margin
-                    y0 = margin
-                    x1 = x0 + dia
-                    y1 = y0 + dia
+                    # center the clock overlay (match the not-playing centered clock)
+                    time_str = now.strftime("%H:%M")
+                    try:
+                        time_font = ImageFont.truetype(
+                            "fonts/Montserrat-Regular.otf", 50)
+                    except Exception:
+                        time_font = ImageFont.load_default()
+
+                    # center coordinates
+                    cx = self.canvas_width // 2
+                    cy = self.canvas_height // 2
+
+                    # compute text bbox centered at (cx,cy)
+                    tb = odraw.textbbox((cx, cy), time_str,
+                                        font=time_font, anchor='mm')
+                    pad = 8
+                    x0 = tb[0] - pad
+                    y0 = tb[1] - pad
+                    x1 = tb[2] + pad
+                    y1 = tb[3] + pad
 
                     body_rgba = (body_rgb[0], body_rgb[1], body_rgb[2], 200)
                     border_rgba = (
                         border_rgb[0], border_rgb[1], border_rgb[2], 255)
 
+                    # draw an ellipse that covers the text bbox with padding
                     odraw.ellipse((x0, y0, x1, y1), fill=body_rgba,
                                   outline=border_rgba, width=3)
 
-                    # draw time string centered in circle
-                    time_str = now.strftime("%H:%M")
-                    # font sized relative to circle
-                    try:
-                        time_font = ImageFont.truetype(
-                            "fonts/Montserrat-Regular.otf", int(dia * 0.45))
-                    except Exception:
-                        time_font = ImageFont.load_default()
-
-                    odraw.text(((x0 + x1) // 2, (y0 + y1) // 2), time_str,
-                               font=time_font, fill=(255, 255, 255, 255), anchor='mm')
+                    # draw time string centered
+                    odraw.text((cx, cy), time_str, font=time_font,
+                               fill=(255, 255, 255, 255), anchor='mm')
 
                     # composite overlay onto frame
                     frame = frame.convert('RGBA')
