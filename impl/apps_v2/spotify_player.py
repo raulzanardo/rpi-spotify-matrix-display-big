@@ -253,10 +253,13 @@ class SpotifyScreen:
                     except Exception:
                         time_font = ImageFont.load_default()
                     color = self._get_clock_digit_color(now.hour, now.minute)
+                    # border as slightly darker
+                    border_color = tuple(max(0, c - 60) for c in color)
                     cx = self.canvas_width // 2
                     cy = self.canvas_height // 2
+                    stroke_w = max(1, int(fsize * 0.08))
                     draw.text((cx, cy), current_time_str,
-                              font=time_font, fill=color, anchor='mm')
+                              font=time_font, fill=color, anchor='mm', stroke_width=stroke_w, stroke_fill=border_color)
                     return (frame, self.is_playing)
 
                 # playing: show album art fullscreen
@@ -305,17 +308,13 @@ class SpotifyScreen:
                     cx = self.canvas_width // 2
                     cy = self.canvas_height // 2
 
-                    # draw outlined time string using cover colors (border then body)
+                    # draw time string with stroke to make it bolder
                     border_fill = (
                         border_rgb[0], border_rgb[1], border_rgb[2], 255)
                     body_fill = (body_rgb[0], body_rgb[1], body_rgb[2], 255)
-                    # draw border by painting text in surrounding pixels
-                    for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1), (-1, -1), (1, -1), (-1, 1), (1, 1)]:
-                        odraw.text((cx + dx, cy + dy), time_str,
-                                   font=time_font, fill=border_fill, anchor='mm')
-                    # draw main body
-                    odraw.text((cx, cy), time_str, font=time_font,
-                               fill=body_fill, anchor='mm')
+                    stroke_w = max(1, int(fsize * 0.08))
+                    odraw.text((cx, cy), time_str, font=time_font, fill=body_fill,
+                               anchor='mm', stroke_width=stroke_w, stroke_fill=border_fill)
 
                     # composite overlay onto frame
                     frame = frame.convert('RGBA')
@@ -346,8 +345,10 @@ class SpotifyScreen:
                     cy = self.canvas_height // 2
                     now = datetime.now()
                     color = self._get_clock_digit_color(now.hour, now.minute)
+                    border_color = tuple(max(0, c - 60) for c in color)
+                    stroke_w = max(1, int(fsize * 0.08))
                     draw.text((cx, cy), current_time_str,
-                              font=time_font, fill=color, anchor='mm')
+                              font=time_font, fill=color, anchor='mm', stroke_width=stroke_w, stroke_fill=border_color)
                     return (frame, self.is_playing)
 
                 if (self.current_title != title or self.current_artist != artist):
@@ -474,8 +475,10 @@ class SpotifyScreen:
             cy = self.canvas_height // 2
             now = datetime.now()
             color = self._get_clock_digit_color(now.hour, now.minute)
+            border_color = tuple(max(0, c - 60) for c in color)
+            stroke_w = max(1, int(fsize * 0.08))
             draw.text((cx, cy), current_time_str,
-                      font=time_font, fill=color, anchor='mm')
+                      font=time_font, fill=color, anchor='mm', stroke_width=stroke_w, stroke_fill=border_color)
 
             self.current_art_url = ''
             self.is_playing = False
