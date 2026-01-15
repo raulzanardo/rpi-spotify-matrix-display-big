@@ -91,7 +91,7 @@ python3 controller_v3.py --fullscreen
 | Argument              | Default | Description                                       |
 | :-------------------- | :------ | :------------------------------------------------ |
 | `-f` , `--fullscreen` | false   | Always display album art in full screen (192x128) |
-| `-c` , `--clock.    ` | false   | show the clock in full screen mode                |
+| `-c` , `--clock.`     | false   | Show the clock in full screen mode                |
 | `-h` , `--help`       | false   | Display help messages for arguments               |
 
 ## Configuration
