@@ -144,6 +144,39 @@ class SpotifyScreen:
 
         return (int(red), int(green), int(blue))
 
+    def _get_top_two_colors(self, img, sample=50):
+        """Return the two most prevalent RGB colors from `img` as (primary, secondary).
+        Falls back to white/gray on error."""
+        try:
+            small = img.convert('RGB').resize((sample, sample))
+            colors = small.getcolors(sample * sample)
+            if colors:
+                # colors is list of (count, (r,g,b))
+                colors.sort(reverse=True, key=lambda x: x[0])
+                top = [c[1] for c in colors[:2]]
+                if len(top) == 1:
+                    top.append(top[0])
+                return (top[0], top[1])
+
+            # fallback: use adaptive palette
+            pal = small.convert('P', palette=Image.ADAPTIVE, colors=5)
+            palette = pal.getpalette()
+            counts = pal.getcolors()
+            counts.sort(reverse=True, key=lambda x: x[0])
+            res = []
+            for cnt, idx in counts[:2]:
+                r = palette[idx * 3]
+                g = palette[idx * 3 + 1]
+                b = palette[idx * 3 + 2]
+                res.append((r, g, b))
+            if len(res) == 1:
+                res.append(res[0])
+            if res:
+                return (res[0], res[1])
+        except Exception:
+            pass
+        return ((255, 255, 255), (200, 200, 200))
+
     def generate(self):
         if not self.spotify_module.queue.empty():
             self.response = self.spotify_module.queue.get()
@@ -193,11 +226,14 @@ class SpotifyScreen:
                 if self.show_clock:
                     from datetime import datetime
                     now = datetime.now()
-                    # derive colors from time-of-day
-                    body_rgb = self._get_clock_digit_color(
-                        now.hour, now.minute)
-                    # slightly darker border
-                    border_rgb = tuple(max(0, c - 60) for c in body_rgb)
+                    # prefer using the two most prevalent colors from the album cover
+                    if self.current_art_img is not None:
+                        body_rgb, border_rgb = self._get_top_two_colors(
+                            self.current_art_img)
+                    else:
+                        body_rgb = self._get_clock_digit_color(
+                            now.hour, now.minute)
+                        border_rgb = tuple(max(0, c - 60) for c in body_rgb)
 
                     # overlay with alpha for subtle background
                     overlay = Image.new(
@@ -216,9 +252,17 @@ class SpotifyScreen:
                     cx = self.canvas_width // 2
                     cy = self.canvas_height // 2
 
-                    # draw time string centered
+                    # draw outlined time string using cover colors (border then body)
+                    border_fill = (
+                        border_rgb[0], border_rgb[1], border_rgb[2], 255)
+                    body_fill = (body_rgb[0], body_rgb[1], body_rgb[2], 255)
+                    # draw border by painting text in surrounding pixels
+                    for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1), (-1, -1), (1, -1), (-1, 1), (1, 1)]:
+                        odraw.text((cx + dx, cy + dy), time_str,
+                                   font=time_font, fill=border_fill, anchor='mm')
+                    # draw main body
                     odraw.text((cx, cy), time_str, font=time_font,
-                               fill=(255, 255, 255, 255), anchor='mm')
+                               fill=body_fill, anchor='mm')
 
                     # composite overlay onto frame
                     frame = frame.convert('RGBA')
