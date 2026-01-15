@@ -244,9 +244,12 @@ class SpotifyScreen:
                         "RGB", (self.canvas_width, self.canvas_height), (0, 0, 0))
                     draw = ImageDraw.Draw(frame)
                     current_time_str = now.strftime("%H:%M")
+                    # choose font size relative to canvas so it's larger and always centered
                     try:
+                        fsize = max(
+                            10, int(min(self.canvas_width, self.canvas_height) * 0.48))
                         time_font = ImageFont.truetype(
-                            "fonts/Montserrat-Regular.otf", 50)
+                            "fonts/Montserrat-Regular.otf", fsize)
                     except Exception:
                         time_font = ImageFont.load_default()
                     color = self._get_clock_digit_color(now.hour, now.minute)
@@ -289,9 +292,12 @@ class SpotifyScreen:
 
                     # center the clock overlay (match the not-playing centered clock)
                     time_str = now.strftime("%H:%M")
+                    # choose font size relative to canvas so it's larger and always centered
                     try:
+                        fsize = max(
+                            10, int(min(self.canvas_width, self.canvas_height) * 0.48))
                         time_font = ImageFont.truetype(
-                            "fonts/Montserrat-Regular.otf", 50)
+                            "fonts/Montserrat-Regular.otf", fsize)
                     except Exception:
                         time_font = ImageFont.load_default()
 
@@ -325,8 +331,14 @@ class SpotifyScreen:
                         "RGB", (self.canvas_width, self.canvas_height), (0, 0, 0))
                     draw = ImageDraw.Draw(frame)
                     current_time_str = datetime.now().strftime("%H:%M")
-                    time_font = ImageFont.truetype(
-                        "fonts/Montserrat-Regular.otf", 50)
+                    # choose font size relative to canvas so it's larger and always centered
+                    try:
+                        fsize = max(
+                            10, int(min(self.canvas_width, self.canvas_height) * 0.48))
+                        time_font = ImageFont.truetype(
+                            "fonts/Montserrat-Regular.otf", fsize)
+                    except Exception:
+                        time_font = ImageFont.load_default()
                     time_bbox = draw.textbbox(
                         (0, 0), current_time_str, font=time_font)
                     # center using midpoint anchor 'mm'
@@ -449,7 +461,13 @@ class SpotifyScreen:
 
             # Display current time centered on screen
             current_time_str = datetime.now().strftime("%H:%M")
-            time_font = ImageFont.truetype("fonts/Montserrat-Regular.otf", 50)
+            try:
+                fsize = max(
+                    10, int(min(self.canvas_width, self.canvas_height) * 0.48))
+                time_font = ImageFont.truetype(
+                    "fonts/Montserrat-Regular.otf", fsize)
+            except Exception:
+                time_font = ImageFont.load_default()
             time_bbox = draw.textbbox((0, 0), current_time_str, font=time_font)
             # center using midpoint anchor 'mm'
             cx = self.canvas_width // 2
