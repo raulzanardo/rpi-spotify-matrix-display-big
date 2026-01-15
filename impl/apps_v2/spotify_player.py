@@ -204,12 +204,6 @@ class SpotifyScreen:
                     y1 = tb[3] + pad
 
                     body_rgba = (body_rgb[0], body_rgb[1], body_rgb[2], 200)
-                    border_rgba = (
-                        border_rgb[0], border_rgb[1], border_rgb[2], 255)
-
-                    # draw an ellipse that covers the text bbox with padding
-                    odraw.ellipse((x0, y0, x1, y1), fill=body_rgba,
-                                  outline=border_rgba, width=3)
 
                     # draw time string centered
                     odraw.text((cx, cy), time_str, font=time_font,
