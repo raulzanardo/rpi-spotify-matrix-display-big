@@ -156,6 +156,27 @@ class SpotifyScreen:
              progress_ms, duration_ms) = response
 
             if self.full_screen_always:
+                # if not playing, show only the centered clock (no album art)
+                if not self.is_playing:
+                    from datetime import datetime
+                    now = datetime.now()
+                    frame = Image.new(
+                        "RGB", (self.canvas_width, self.canvas_height), (0, 0, 0))
+                    draw = ImageDraw.Draw(frame)
+                    current_time_str = now.strftime("%H:%M")
+                    try:
+                        time_font = ImageFont.truetype(
+                            "fonts/Montserrat-Regular.otf", 50)
+                    except Exception:
+                        time_font = ImageFont.load_default()
+                    color = self._get_clock_digit_color(now.hour, now.minute)
+                    cx = self.canvas_width // 2
+                    cy = self.canvas_height // 2
+                    draw.text((cx, cy), current_time_str,
+                              font=time_font, fill=color, anchor='mm')
+                    return (frame, self.is_playing)
+
+                # playing: show album art fullscreen
                 if self.current_art_url != art_url:
                     self.current_art_url = art_url
                     response = requests.get(self.current_art_url)
@@ -167,7 +188,8 @@ class SpotifyScreen:
                 frame = Image.new(
                     "RGB", (self.canvas_width, self.canvas_height), (0, 0, 0))
                 frame.paste(self.current_art_img, (0, 0))
-                # optionally overlay a small clock on top of the cover (only in fullscreen)
+
+                # optionally overlay a small clock on top of the cover (only in fullscreen and when playing)
                 if self.show_clock:
                     from datetime import datetime
                     now = datetime.now()
@@ -204,6 +226,12 @@ class SpotifyScreen:
                     y1 = tb[3] + pad
 
                     body_rgba = (body_rgb[0], body_rgb[1], body_rgb[2], 200)
+                    border_rgba = (
+                        border_rgb[0], border_rgb[1], border_rgb[2], 255)
+
+                    # draw an ellipse that covers the text bbox with padding
+                    odraw.ellipse((x0, y0, x1, y1), fill=body_rgba,
+                                  outline=border_rgba, width=3)
 
                     # draw time string centered
                     odraw.text((cx, cy), time_str, font=time_font,
@@ -213,6 +241,7 @@ class SpotifyScreen:
                     frame = frame.convert('RGBA')
                     frame = Image.alpha_composite(
                         frame, overlay).convert('RGB')
+
                 return (frame, self.is_playing)
             else:
                 # if playback is paused (music not playing), show clock instead of album art
