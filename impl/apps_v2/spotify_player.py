@@ -5,6 +5,10 @@ import time
 import threading
 from PIL import Image, ImageFont, ImageDraw
 from io import BytesIO
+from pathlib import Path
+
+# Fonts directory (resolve relative to repository root)
+FONT_DIR = Path(__file__).resolve().parents[2] / "fonts"
 
 
 class SpotifyScreen:
@@ -12,8 +16,8 @@ class SpotifyScreen:
         self.modules = modules
 
         # very small fonts for 64px width panel
-        self.title_font = ImageFont.truetype("fonts/tiny.otf", 5)
-        self.artist_font = ImageFont.truetype("fonts/tiny.otf", 5)
+        self.title_font = ImageFont.truetype(str(FONT_DIR / "tiny.otf"), 5)
+        self.artist_font = ImageFont.truetype(str(FONT_DIR / "tiny.otf"), 5)
 
         self.canvas_width = canvas_width
         self.canvas_height = canvas_height
@@ -249,7 +253,7 @@ class SpotifyScreen:
                         fsize = max(
                             10, int(min(self.canvas_width, self.canvas_height) * 0.48))
                         time_font = ImageFont.truetype(
-                            "fonts/Montserrat-Regular.otf", fsize)
+                            str(FONT_DIR / "Montserrat-Regular.otf"), fsize)
                     except Exception:
                         time_font = ImageFont.load_default()
                     color = self._get_clock_digit_color(now.hour, now.minute)
@@ -300,7 +304,7 @@ class SpotifyScreen:
                         fsize = max(
                             10, int(min(self.canvas_width, self.canvas_height) * 0.48))
                         time_font = ImageFont.truetype(
-                            "fonts/Montserrat-Regular.otf", fsize)
+                            str(FONT_DIR / "Montserrat-Regular.otf"), fsize)
                     except Exception:
                         time_font = ImageFont.load_default()
 
@@ -335,7 +339,7 @@ class SpotifyScreen:
                         fsize = max(
                             10, int(min(self.canvas_width, self.canvas_height) * 0.48))
                         time_font = ImageFont.truetype(
-                            "fonts/Montserrat-Regular.otf", fsize)
+                            str(FONT_DIR / "Montserrat-Regular.otf"), fsize)
                     except Exception:
                         time_font = ImageFont.load_default()
                     time_bbox = draw.textbbox(
@@ -466,7 +470,7 @@ class SpotifyScreen:
                 fsize = max(
                     10, int(min(self.canvas_width, self.canvas_height) * 0.48))
                 time_font = ImageFont.truetype(
-                    "fonts/Montserrat-Regular.otf", fsize)
+                    str(FONT_DIR / "Montserrat-Regular.otf"), fsize)
             except Exception:
                 time_font = ImageFont.load_default()
             time_bbox = draw.textbbox((0, 0), current_time_str, font=time_font)
